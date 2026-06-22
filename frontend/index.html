@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MemoraX AI</title>
+<style>
+  :root{
+    --bg:#0b0b10;
+    --panel:#13131b;
+    --panel-2:#191923;
+    --border:#26262f;
+    --text:#f2f2f5;
+    --muted:#9a98a8;
+    --accent:#7c5cff;
+    --accent-2:#a78bfa;
+    --green:#34d399;
+    --amber:#fbbf24;
+    --red:#f87171;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  }
+  a{color:inherit;}
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:16px 28px;border-bottom:1px solid var(--border);
+  }
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;}
+  .brand .logo{
+    width:30px;height:30px;border-radius:9px;
+    background:linear-gradient(135deg,var(--accent),var(--accent-2));
+    display:flex;align-items:center;justify-content:center;font-size:15px;
+  }
+  .brand span.x{color:var(--accent-2);}
+  .pill-btn{
+    background:linear-gradient(135deg,var(--accent),var(--accent-2));
+    color:white;border:none;padding:9px 18px;border-radius:10px;
+    font-weight:600;font-size:14px;cursor:pointer;
+  }
+  .ghost-btn{
+    background:transparent;border:1px solid var(--border);color:var(--text);
+    padding:9px 16px;border-radius:10px;font-weight:600;font-size:14px;cursor:pointer;
+  }
+  .topbar-right{display:flex;align-items:center;gap:10px;}
+
+  .layout{display:flex;min-height:calc(100vh - 65px);}
+  .sidebar{
+    width:230px;border-right:1px solid var(--border);padding:18px 12px;
+    display:flex;flex-direction:column;gap:2px;flex-shrink:0;
+  }
+  .nav-item{
+    display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;
+    color:var(--muted);font-size:14px;font-weight:500;cursor:pointer;
+  }
+  .nav-item:hover{background:var(--panel-2);color:var(--text);}
+  .nav-item.active{background:rgba(124,92,255,0.15);color:var(--accent-2);}
+  .nav-icon{width:18px;text-align:center;}
+
+  .main{flex:1;padding:26px 30px;overflow-y:auto;}
+  .hello{font-size:22px;font-weight:700;margin-bottom:2px;}
+  .sub{color:var(--muted);font-size:14px;margin-bottom:22px;}
+
+  .grid-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px;}
+  .card{
+    background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);
+    padding:18px;
+  }
+  .stat-label{color:var(--muted);font-size:13px;margin-bottom:8px;}
+  .stat-value{font-size:26px;font-weight:700;}
+  .stat-delta{font-size:12px;color:var(--green);margin-top:6px;}
+
+  .grid-2{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-bottom:22px;}
+  .panel-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+  .panel-title h3{font-size:15px;margin:0;}
+  .view-all{font-size:12px;color:var(--muted);cursor:pointer;}
+
+  .list-item{
+    display:flex;justify-content:space-between;align-items:flex-start;
+    padding:10px 0;border-bottom:1px solid var(--border);
+  }
+  .list-item:last-child{border-bottom:none;}
+  .li-title{font-size:13.5px;font-weight:500;}
+  .li-sub{font-size:11.5px;color:var(--muted);margin-top:3px;}
+  .badge{
+    font-size:11px;padding:3px 9px;border-radius:7px;font-weight:600;white-space:nowrap;
+  }
+  .badge.high{background:rgba(248,113,113,0.15);color:var(--red);}
+  .badge.medium{background:rgba(251,191,36,0.15);color:var(--amber);}
+  .badge.low{background:rgba(154,152,168,0.15);color:var(--muted);}
+  .badge.days{background:var(--panel-2);color:var(--muted);}
+
+  .chatbox{
+    background:var(--panel);border:1px solid var(--accent);border-radius:var(--radius);
+    padding:14px 18px;display:flex;align-items:center;gap:12px;
+  }
+  .chatbox input{
+    flex:1;background:transparent;border:none;color:var(--text);font-size:14px;outline:none;
+  }
+  .mic-btn{
+    width:36px;height:36px;border-radius:50%;border:none;cursor:pointer;
+    background:linear-gradient(135deg,var(--accent),var(--accent-2));color:white;
+    display:flex;align-items:center;justify-content:center;
+  }
+
+  .chat-log{
+    max-height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;margin-bottom:14px;
+  }
+  .msg{padding:10px 14px;border-radius:12px;font-size:13.5px;max-width:78%;line-height:1.45;}
+  .msg.user{background:var(--accent);color:white;align-self:flex-end;}
+  .msg.ai{background:var(--panel-2);align-self:flex-start;border:1px solid var(--border);}
+  .msg-meta{font-size:10.5px;color:var(--muted);margin-top:4px;}
+  .alert-scam{
+    background:rgba(248,113,113,0.12);border:1px solid var(--red);color:var(--red);
+    padding:8px 12px;border-radius:10px;font-size:12.5px;margin-bottom:8px;
+  }
+
+  .section-title{font-size:20px;font-weight:700;margin-bottom:18px;}
+  .table-wrap{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+  .row{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);}
+  .row:last-child{border-bottom:none;}
+  .row-left{display:flex;align-items:center;gap:12px;}
+  .check{
+    width:18px;height:18px;border-radius:5px;border:1.5px solid var(--border);cursor:pointer;
+    display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--green);
+  }
+  .check.done{background:var(--green);border-color:var(--green);color:#0b0b10;}
+  .row.completed .li-title{text-decoration:line-through;color:var(--muted);}
+
+  .form-inline{display:flex;gap:10px;margin-bottom:18px;}
+  .form-inline input{
+    background:var(--panel);border:1px solid var(--border);border-radius:10px;
+    padding:11px 14px;color:var(--text);font-size:13.5px;
+  }
+  .form-inline input[type=text]{flex:1;}
+
+  .empty{color:var(--muted);font-size:13.5px;padding:30px;text-align:center;}
+  .hidden{display:none !important;}
+  .auth-wrap{
+    display:flex;align-items:center;justify-content:center;min-height:100vh;
+  }
+  .auth-card{
+    width:380px;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:32px;
+  }
+  .auth-card h2{margin:0 0 4px;font-size:22px;}
+  .auth-card p{color:var(--muted);font-size:13.5px;margin:0 0 22px;}
+  .auth-card input{
+    width:100%;background:var(--panel-2);border:1px solid var(--border);border-radius:10px;
+    padding:11px 14px;color:var(--text);font-size:13.5px;margin-bottom:12px;
+  }
+  .auth-card button{width:100%;margin-top:6px;}
+  .auth-toggle{margin-top:16px;font-size:13px;color:var(--muted);text-align:center;}
+  .auth-toggle a{color:var(--accent-2);cursor:pointer;font-weight:600;}
+  .auth-error{color:var(--red);font-size:12.5px;margin-bottom:10px;min-height:14px;}
+  .doc-upload{border:1.5px dashed var(--border);border-radius:var(--radius);padding:30px;text-align:center;margin-bottom:18px;color:var(--muted);font-size:13.5px;}
+  .doc-upload input{display:none;}
+  .doc-upload label{color:var(--accent-2);cursor:pointer;font-weight:600;}
+  .risk-bar{height:6px;border-radius:4px;background:var(--panel-2);overflow:hidden;margin-top:6px;width:140px;}
+  .risk-fill{height:100%;border-radius:4px;}
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="authScreen" class="auth-wrap">
+  <div class="auth-card">
+    <h2 id="authTitle">Welcome back</h2>
+    <p id="authSub">Log in to your Second Brain.</p>
+    <div class="auth-error" id="authError"></div>
+    <input type="text" id="authName" placeholder="Full name" class="hidden">
+    <input type="email" id="authEmail" placeholder="Email">
+    <input type="password" id="authPassword" placeholder="Password">
+    <button class="pill-btn" id="authSubmit" onclick="submitAuth()">Login</button>
+    <div class="auth-toggle">
+      <span id="authToggleText">Don't have an account? <a onclick="toggleAuthMode()">Sign up</a></span>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" class="hidden">
+  <div class="topbar">
+    <div class="brand"><div class="logo">🧠</div>Memora<span class="x">X</span> AI</div>
+    <div class="topbar-right">
+      <div style="position:relative;">
+        <span id="bellIcon" style="cursor:pointer;font-size:18px;" onclick="toggleNotifPanel()">🔔<span id="notifDot" class="hidden" style="position:absolute;top:-2px;right:-2px;width:8px;height:8px;background:var(--red);border-radius:50%;"></span></span>
+        <div id="notifPanel" class="hidden card" style="position:absolute;right:0;top:30px;width:320px;max-height:340px;overflow-y:auto;z-index:50;"></div>
+      </div>
+      <span class="sub" id="userGreetTop" style="margin:0;"></span>
+      <button class="ghost-btn" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="sidebar" id="sidebar">
+      <div class="nav-item active" data-tab="dashboard">📊 &nbsp;Dashboard</div>
+      <div class="nav-item" data-tab="chat">💬 &nbsp;Conversations</div>
+      <div class="nav-item" data-tab="memories">🧩 &nbsp;Memories</div>
+      <div class="nav-item" data-tab="tasks">✅ &nbsp;Tasks</div>
+      <div class="nav-item" data-tab="events">📅 &nbsp;Events</div>
+      <div class="nav-item" data-tab="documents">📄 &nbsp;Documents</div>
+      <div class="nav-item" data-tab="voice">🎤 &nbsp;Voice Assistant</div>
+      <div class="nav-item" data-tab="analytics">📈 &nbsp;Analytics</div>
+      <div class="nav-item" data-tab="settings">⚙️ &nbsp;Settings</div>
+    </div>
+
+    <div class="main">
+
+      <!-- DASHBOARD -->
+      <div id="tab-dashboard">
+        <div class="hello" id="hello">Good day 👋</div>
+        <div class="sub">Here's what's happening with your AI companion today.</div>
+
+        <div class="grid-stats" id="statsGrid"></div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="panel-title"><h3>Recent Memories</h3><span class="view-all" onclick="switchTab('memories')">View All</span></div>
+            <div id="recentMemories"></div>
+          </div>
+          <div class="card">
+            <div class="panel-title"><h3>Upcoming Tasks</h3><span class="view-all" onclick="switchTab('tasks')">View All</span></div>
+            <div id="upcomingTasks"></div>
+          </div>
+        </div>
+
+        <div class="chatbox">
+          <input id="quickChatInput" placeholder="How can I help you today? Type your message..." onkeydown="if(event.key==='Enter')quickSend()">
+          <button class="mic-btn" onclick="quickSend()">➤</button>
+        </div>
+      </div>
+
+      <!-- CHAT -->
+      <div id="tab-chat" class="hidden">
+        <div class="section-title">Conversations</div>
+        <div class="card">
+          <div class="chat-log" id="chatLog"></div>
+          <div class="chatbox">
+            <input id="chatInput" placeholder="Talk to MemoraX..." onkeydown="if(event.key==='Enter')sendChat()">
+            <button class="mic-btn" onclick="sendChat()">➤</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- MEMORIES -->
+      <div id="tab-memories" class="hidden">
+        <div class="section-title">Memories</div>
+        <div class="table-wrap" id="memoriesTable"></div>
+      </div>
+
+      <!-- TASKS -->
+      <div id="tab-tasks" class="hidden">
+        <div class="section-title">Tasks</div>
+        <div class="form-inline">
+          <input type="text" id="newTaskTitle" placeholder="Task title">
+          <input type="date" id="newTaskDate">
+          <button class="pill-btn" onclick="addTask()">Add Task</button>
+        </div>
+        <div class="table-wrap" id="tasksTable"></div>
+      </div>
+
+      <!-- DOCUMENTS -->
+      <div id="tab-documents" class="hidden">
+        <div class="section-title">Documents</div>
+        <div class="doc-upload">
+          📄 Drop a .txt/.md file or <label for="docFile">browse</label> to upload
+          <input type="file" id="docFile" accept=".txt,.md,.csv" onchange="uploadDoc()">
+        </div>
+        <div class="table-wrap" id="documentsTable"></div>
+        <div class="card" style="margin-top:16px;">
+          <div class="panel-title"><h3>Ask your documents</h3></div>
+          <div class="form-inline">
+            <select id="docSelect" style="background:var(--panel-2);border:1px solid var(--border);border-radius:10px;padding:11px;color:var(--text);"></select>
+            <input type="text" id="docQuestion" placeholder="e.g. What is in my notes about deadlocks?">
+            <button class="pill-btn" onclick="askDoc()">Ask</button>
+          </div>
+          <div id="docAnswer" class="sub"></div>
+        </div>
+      </div>
+
+      <!-- EVENTS -->
+      <div id="tab-events" class="hidden">
+        <div class="section-title">Events</div>
+        <div class="form-inline">
+          <input type="text" id="newEventTitle" placeholder="Event title">
+          <input type="date" id="newEventDate">
+          <select id="newEventType" style="background:var(--panel-2);border:1px solid var(--border);border-radius:10px;padding:11px;color:var(--text);">
+            <option value="general">General</option>
+            <option value="interview">Interview</option>
+            <option value="exam">Exam</option>
+            <option value="deadline">Deadline</option>
+            <option value="hackathon">Hackathon</option>
+          </select>
+          <button class="pill-btn" onclick="addEvent()">Add Event</button>
+        </div>
+        <div class="table-wrap" id="eventsTable"></div>
+      </div>
+
+      <!-- VOICE ASSISTANT -->
+      <div id="tab-voice" class="hidden">
+        <div class="section-title">Voice Assistant</div>
+        <div class="card" style="text-align:center;padding:40px;">
+          <div id="voiceStatus" class="sub" style="margin-bottom:18px;">Tap the mic and speak to MemoraX.</div>
+          <button id="voiceMicBtn" onclick="toggleListening()" style="width:84px;height:84px;border-radius:50%;border:none;cursor:pointer;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:white;font-size:30px;">🎤</button>
+          <div id="voiceTranscript" class="sub" style="margin-top:22px;min-height:20px;"></div>
+          <div id="voiceReply" class="card" style="margin-top:16px;text-align:left;display:none;background:var(--panel-2);"></div>
+          <div class="sub" style="margin-top:16px;font-size:11.5px;">
+            Uses your browser's built-in speech recognition &amp; synthesis (Web Speech API) —
+            a real, working stand-in for Whisper (STT) / Kokoro (TTS) that needs no server-side models.
+          </div>
+        </div>
+      </div>
+
+      <!-- ANALYTICS -->
+      <div id="tab-analytics" class="hidden">
+        <div class="section-title">Analytics</div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="panel-title"><h3>Conversations — last 14 days</h3></div>
+            <canvas id="chartConvos" width="460" height="200"></canvas>
+          </div>
+          <div class="card">
+            <div class="panel-title"><h3>Memory Importance</h3></div>
+            <canvas id="chartImportance" width="320" height="200"></canvas>
+          </div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="panel-title"><h3>Emotion Breakdown</h3></div>
+            <canvas id="chartEmotion" width="320" height="200"></canvas>
+          </div>
+          <div class="card">
+            <div class="panel-title"><h3>Task Completion</h3></div>
+            <canvas id="chartTasks" width="320" height="200"></canvas>
+            <div class="sub" id="avgScamRisk" style="margin-top:10px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div id="tab-settings" class="hidden">
+        <div class="section-title">Settings</div>
+        <div class="card" style="max-width:480px;">
+          <div class="panel-title"><h3>Preferences</h3></div>
+          <div class="list-item">
+            <div><div class="li-title">Theme</div><div class="li-sub">Switch between dark and light mode</div></div>
+            <select id="settingTheme" onchange="saveSettings()" style="background:var(--panel-2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);">
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+            </select>
+          </div>
+          <div class="list-item">
+            <div><div class="li-title">Voice replies</div><div class="li-sub">Read AI replies aloud automatically</div></div>
+            <input type="checkbox" id="settingVoice" onchange="saveSettings()">
+          </div>
+          <div class="list-item">
+            <div><div class="li-title">Notifications</div><div class="li-sub">Get notified about important memories &amp; tasks</div></div>
+            <input type="checkbox" id="settingNotif" onchange="saveSettings()">
+          </div>
+          <div class="list-item" style="border-bottom:none;">
+            <div><div class="li-title">AI engine</div><div class="li-sub">Which model powers replies (rule-based in this starter)</div></div>
+            <select id="settingLLM" onchange="saveSettings()" style="background:var(--panel-2);border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--text);">
+              <option value="rule-based">Rule-based (built-in)</option>
+              <option value="llama3.1">Llama 3.1 (connect your own)</option>
+              <option value="gpt">GPT (connect your own)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const API = "http://127.0.0.1:8000/api";
+let TOKEN = localStorage.getItem("memorax_token") || null;
+let USER = null;
+let isSignup = false;
+
+function authHeaders(){ return {"Authorization": "Bearer " + TOKEN}; }
+
+async function api(path, method="GET", body=null, isForm=false){
+  const opts = { method, headers: {} };
+  if (TOKEN) opts.headers["Authorization"] = "Bearer " + TOKEN;
+  if (body && !isForm){
+    opts.headers["Content-Type"] = "application/json";
+    opts.body = JSON.stringify(body);
+  } else if (isForm){
+    opts.body = body;
+  }
+  const res = await fetch(API + path, opts);
+  if (!res.ok){
+    const err = await res.json().catch(()=>({detail:"Request failed"}));
+    throw new Error(err.detail || "Request failed");
+  }
+  return res.json();
+}
+
+function toggleAuthMode(){
+  isSignup = !isSignup;
+  document.getElementById("authTitle").textContent = isSignup ? "Create your account" : "Welcome back";
+  document.getElementById("authSub").textContent = isSignup ? "Start building your Second Brain." : "Log in to your Second Brain.";
+  document.getElementById("authName").classList.toggle("hidden", !isSignup);
+  document.getElementById("authSubmit").textContent = isSignup ? "Sign up" : "Login";
+  document.getElementById("authToggleText").innerHTML = isSignup
+    ? 'Already have an account? <a onclick="toggleAuthMode()">Log in</a>'
+    : "Don't have an account? <a onclick=\"toggleAuthMode()\">Sign up</a>";
+  document.getElementById("authError").textContent = "";
+}
+
+async function submitAuth(){
+  const email = document.getElementById("authEmail").value.trim();
+  const password = document.getElementById("authPassword").value;
+  const name = document.getElementById("authName").value.trim();
+  const errEl = document.getElementById("authError");
+  errEl.textContent = "";
+  try{
+    let data;
+    if (isSignup){
+      if (!name) { errEl.textContent = "Please enter your name."; return; }
+      data = await api("/auth/register", "POST", {name, email, password});
+    } else {
+      data = await api("/auth/login", "POST", {email, password});
+    }
+    TOKEN = data.token; USER = data.user;
+    localStorage.setItem("memorax_token", TOKEN);
+    enterApp();
+  } catch(e){
+    errEl.textContent = e.message;
+  }
+}
+
+function logout(){
+  TOKEN = null; USER = null;
+  localStorage.removeItem("memorax_token");
+  document.getElementById("app").classList.add("hidden");
+  document.getElementById("authScreen").classList.remove("hidden");
+}
+
+async function enterApp(){
+  try{
+    USER = await api("/auth/me");
+  } catch(e){ logout(); return; }
+  document.getElementById("authScreen").classList.add("hidden");
+  document.getElementById("app").classList.remove("hidden");
+  document.getElementById("hello").textContent = `Good day, ${USER.name} 👋`;
+  document.getElementById("userGreetTop").textContent = USER.name;
+  switchTab("dashboard");
+  loadDashboard();
+  loadNotifications();
+  applySettingsTheme();
+}
+
+document.querySelectorAll(".nav-item").forEach(el=>{
+  el.addEventListener("click", ()=> switchTab(el.dataset.tab));
+});
+
+function switchTab(tab){
+  document.querySelectorAll(".nav-item").forEach(el=>{
+    el.classList.toggle("active", el.dataset.tab === tab);
+  });
+  ["dashboard","chat","memories","tasks","events","documents","voice","analytics","settings"].forEach(t=>{
+    document.getElementById("tab-"+t).classList.toggle("hidden", t !== tab);
+  });
+  if (tab === "dashboard") loadDashboard();
+  if (tab === "chat") loadChatLog();
+  if (tab === "memories") loadMemories();
+  if (tab === "tasks") loadTasks();
+  if (tab === "events") loadEvents();
+  if (tab === "documents") loadDocuments();
+  if (tab === "analytics") loadAnalytics();
+  if (tab === "settings") loadSettings();
+}
+
+function daysLeft(dateStr){
+  if(!dateStr) return "";
+  const d = new Date(dateStr); const now = new Date();
+  const diff = Math.ceil((d - now) / (1000*60*60*24));
+  if (isNaN(diff)) return dateStr;
+  if (diff < 0) return "overdue";
+  if (diff === 0) return "today";
+  return diff + " days left";
+}
+
+async function loadDashboard(){
+  const d = await api("/dashboard");
+  document.getElementById("statsGrid").innerHTML = `
+    <div class="card"><div class="stat-label">Conversations</div><div class="stat-value">${d.conversations}</div></div>
+    <div class="card"><div class="stat-label">Memories</div><div class="stat-value">${d.memories}</div></div>
+    <div class="card"><div class="stat-label">Tasks Pending</div><div class="stat-value">${d.tasks_pending}</div></div>
+    <div class="card"><div class="stat-label">Productivity Score</div><div class="stat-value">${d.productivity_score}%</div></div>
+  `;
+  const rm = document.getElementById("recentMemories");
+  rm.innerHTML = d.recent_memories.length ? d.recent_memories.map(m=>`
+    <div class="list-item">
+      <div><div class="li-title">${escapeHtml(m.fact)}</div><div class="li-sub">${timeAgo(m.created_at)}</div></div>
+      <span class="badge ${m.importance}">${m.importance}</span>
+    </div>`).join("") : `<div class="empty">No memories yet — start chatting below.</div>`;
+
+  const ut = document.getElementById("upcomingTasks");
+  ut.innerHTML = d.upcoming_tasks.length ? d.upcoming_tasks.map(t=>`
+    <div class="list-item">
+      <div><div class="li-title">${escapeHtml(t.title)}</div><div class="li-sub">${t.due_date || "no date"}</div></div>
+      <span class="badge days">${daysLeft(t.due_date)}</span>
+    </div>`).join("") : `<div class="empty">No upcoming tasks.</div>`;
+}
+
+function escapeHtml(s){
+  return (s||"").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function timeAgo(iso){
+  if(!iso) return "";
+  const diffMin = Math.floor((Date.now() - new Date(iso))/60000);
+  if (diffMin < 1) return "just now";
+  if (diffMin < 60) return diffMin + "m ago";
+  if (diffMin < 1440) return Math.floor(diffMin/60) + "h ago";
+  return Math.floor(diffMin/1440) + "d ago";
+}
+
+async function quickSend(){
+  const input = document.getElementById("quickChatInput");
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = "";
+  const res = await api("/chat", "POST", {message: msg});
+  loadDashboard();
+  loadNotifications();
+  maybeSpeak(res.reply);
+  switchTab("chat");
+}
+async function maybeSpeak(text){
+  try{
+    const s = await api("/settings");
+    if (s.voice_replies) speakReply(text);
+  } catch(e){}
+}
+
+async function loadChatLog(){
+  const log = (await api("/conversations")).reverse();
+  const el = document.getElementById("chatLog");
+  el.innerHTML = log.map(c=>{
+    if (c.role === "user"){
+      let scamHtml = "";
+      if (c.scam_risk && c.scam_risk >= 50){
+        scamHtml = `<div class="alert-scam">⚠️ Potential scam detected — risk score ${c.scam_risk}%</div>`;
+      }
+      return `${scamHtml}<div class="msg user">${escapeHtml(c.message)}<div class="msg-meta">${c.emotion !== "neutral" ? "feeling: "+c.emotion+" · " : ""}${timeAgo(c.created_at)}</div></div>`;
+    }
+    return `<div class="msg ai">${escapeHtml(c.message)}</div>`;
+  }).join("");
+  el.scrollTop = el.scrollHeight;
+}
+
+async function sendChat(){
+  const input = document.getElementById("chatInput");
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = "";
+  const res = await api("/chat", "POST", {message: msg});
+  loadChatLog();
+  loadNotifications();
+  maybeSpeak(res.reply);
+}
+
+async function loadMemories(){
+  const mems = await api("/memories");
+  const el = document.getElementById("memoriesTable");
+  el.innerHTML = mems.length ? mems.map(m=>`
+    <div class="row">
+      <div class="row-left">
+        <div><div class="li-title">${escapeHtml(m.fact)}</div><div class="li-sub">${m.category} · ${timeAgo(m.created_at)}</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="badge ${m.importance}">${m.importance}</span>
+        <span class="ghost-btn" style="padding:5px 10px;font-size:12px;" onclick="deleteMemory('${m.id}')">Delete</span>
+      </div>
+    </div>`).join("") : `<div class="empty">No memories stored yet. Chat with MemoraX to build your Second Brain.</div>`;
+}
+async function deleteMemory(id){
+  await api("/memories/"+id, "DELETE");
+  loadMemories();
+}
+
+async function loadTasks(){
+  const tasks = await api("/tasks");
+  const el = document.getElementById("tasksTable");
+  el.innerHTML = tasks.length ? tasks.map(t=>`
+    <div class="row ${t.status === 'completed' ? 'completed' : ''}">
+      <div class="row-left">
+        <div class="check ${t.status === 'completed' ? 'done' : ''}" onclick="toggleTask('${t.id}','${t.status}')">${t.status==='completed' ? '✓' : ''}</div>
+        <div><div class="li-title">${escapeHtml(t.title)}</div><div class="li-sub">${t.due_date || "no date"}</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="badge days">${t.status === 'completed' ? 'done' : daysLeft(t.due_date)}</span>
+        <span class="ghost-btn" style="padding:5px 10px;font-size:12px;" onclick="deleteTask('${t.id}')">Delete</span>
+      </div>
+    </div>`).join("") : `<div class="empty">No tasks yet. Tell MemoraX "Remember: ... on July 15" to auto-create one.</div>`;
+}
+async function toggleTask(id, status){
+  if (status !== "completed") await api(`/tasks/${id}/complete`, "PUT");
+  loadTasks(); loadDashboard();
+}
+async function deleteTask(id){
+  await api("/tasks/"+id, "DELETE");
+  loadTasks();
+}
+async function addTask(){
+  const title = document.getElementById("newTaskTitle").value.trim();
+  const date = document.getElementById("newTaskDate").value;
+  if (!title) return;
+  await api("/tasks", "POST", {title, due_date: date || null});
+  document.getElementById("newTaskTitle").value = "";
+  document.getElementById("newTaskDate").value = "";
+  loadTasks();
+}
+
+async function loadDocuments(){
+  const docs = await api("/documents");
+  const el = document.getElementById("documentsTable");
+  el.innerHTML = docs.length ? docs.map(d=>`
+    <div class="row">
+      <div class="row-left"><div><div class="li-title">${escapeHtml(d.filename)}</div><div class="li-sub">${d.chars} chars · ${timeAgo(d.created_at)}</div></div></div>
+    </div>`).join("") : `<div class="empty">No documents uploaded yet.</div>`;
+  const sel = document.getElementById("docSelect");
+  sel.innerHTML = docs.map(d=>`<option value="${d.id}">${escapeHtml(d.filename)}</option>`).join("");
+}
+async function uploadDoc(){
+  const file = document.getElementById("docFile").files[0];
+  if (!file) return;
+  const fd = new FormData();
+  fd.append("file", file);
+  await api("/documents/upload", "POST", fd, true);
+  document.getElementById("docFile").value = "";
+  loadDocuments();
+}
+async function askDoc(){
+  const document_id = document.getElementById("docSelect").value;
+  const question = document.getElementById("docQuestion").value.trim();
+  if (!document_id || !question) return;
+  const res = await api("/documents/ask", "POST", {document_id, question});
+  document.getElementById("docAnswer").textContent = "AI: " + res.answer;
+}
+
+// ---------------- EVENTS ----------------
+async function loadEvents(){
+  const events = await api("/events");
+  const el = document.getElementById("eventsTable");
+  el.innerHTML = events.length ? events.map(e=>`
+    <div class="row">
+      <div class="row-left">
+        <div><div class="li-title">${escapeHtml(e.title)}</div><div class="li-sub">${e.event_type} · ${e.event_date}</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="badge days">${daysLeft(e.event_date)}</span>
+        <span class="ghost-btn" style="padding:5px 10px;font-size:12px;" onclick="deleteEvent('${e.id}')">Delete</span>
+      </div>
+    </div>`).join("") : `<div class="empty">No events yet. Add interviews, exams, or deadlines above.</div>`;
+}
+async function addEvent(){
+  const title = document.getElementById("newEventTitle").value.trim();
+  const event_date = document.getElementById("newEventDate").value;
+  const event_type = document.getElementById("newEventType").value;
+  if (!title || !event_date) return;
+  await api("/events", "POST", {title, event_date, event_type});
+  document.getElementById("newEventTitle").value = "";
+  document.getElementById("newEventDate").value = "";
+  loadEvents();
+  loadNotifications();
+}
+async function deleteEvent(id){
+  await api("/events/"+id, "DELETE");
+  loadEvents();
+}
+
+// ---------------- NOTIFICATIONS ----------------
+async function loadNotifications(){
+  const notifs = await api("/notifications");
+  const unread = notifs.filter(n=>!n.is_read).length;
+  document.getElementById("notifDot").classList.toggle("hidden", unread === 0);
+  const panel = document.getElementById("notifPanel");
+  panel.innerHTML = notifs.length ? notifs.map(n=>`
+    <div class="list-item">
+      <div><div class="li-title" style="${n.is_read ? 'color:var(--muted);' : ''}">${escapeHtml(n.message)}</div><div class="li-sub">${timeAgo(n.created_at)}</div></div>
+    </div>`).join("") : `<div class="empty">No notifications yet.</div>`;
+}
+function toggleNotifPanel(){
+  const panel = document.getElementById("notifPanel");
+  panel.classList.toggle("hidden");
+  if (!panel.classList.contains("hidden")){
+    api("/notifications/read-all", "PUT").then(loadNotifications);
+  }
+}
+
+// ---------------- ANALYTICS ----------------
+function drawBarChart(canvasId, labels, values, colorFn){
+  const canvas = document.getElementById(canvasId);
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  if (!labels.length){
+    ctx.fillStyle = "#9a98a8"; ctx.font = "13px Inter";
+    ctx.fillText("No data yet", 10, 100);
+    return;
+  }
+  const max = Math.max(...values, 1);
+  const barW = canvas.width / labels.length;
+  values.forEach((v,i)=>{
+    const h = (v / max) * (canvas.height - 40);
+    ctx.fillStyle = colorFn ? colorFn(i) : "#7c5cff";
+    ctx.fillRect(i*barW + barW*0.2, canvas.height - h - 24, barW*0.6, h);
+    ctx.fillStyle = "#f2f2f5"; ctx.font = "11px Inter"; ctx.textAlign = "center";
+    ctx.fillText(v, i*barW + barW*0.5, canvas.height - h - 30);
+    ctx.fillStyle = "#9a98a8";
+    ctx.fillText(String(labels[i]).slice(5), i*barW + barW*0.5, canvas.height - 8);
+  });
+  ctx.textAlign = "left";
+}
+async function loadAnalytics(){
+  const a = await api("/analytics");
+  drawBarChart("chartConvos", a.conversations_by_day.map(d=>d.day), a.conversations_by_day.map(d=>d.c));
+  const impColors = {high:"#f87171", medium:"#fbbf24", low:"#9a98a8"};
+  drawBarChart("chartImportance", a.memory_importance_breakdown.map(d=>d.importance),
+    a.memory_importance_breakdown.map(d=>d.c), i=>impColors[a.memory_importance_breakdown[i].importance] || "#7c5cff");
+  drawBarChart("chartEmotion", a.emotion_breakdown.map(d=>d.emotion), a.emotion_breakdown.map(d=>d.c));
+  const taskColors = {pending:"#fbbf24", completed:"#34d399"};
+  drawBarChart("chartTasks", a.task_completion.map(d=>d.status), a.task_completion.map(d=>d.c),
+    i=>taskColors[a.task_completion[i].status] || "#7c5cff");
+  document.getElementById("avgScamRisk").textContent = `Average scam risk score across all messages: ${a.avg_scam_risk}%`;
+}
+
+// ---------------- SETTINGS ----------------
+async function loadSettings(){
+  const s = await api("/settings");
+  document.getElementById("settingTheme").value = s.theme;
+  document.getElementById("settingVoice").checked = !!s.voice_replies;
+  document.getElementById("settingNotif").checked = !!s.notifications;
+  document.getElementById("settingLLM").value = s.llm_provider;
+}
+async function saveSettings(){
+  const theme = document.getElementById("settingTheme").value;
+  const voice_replies = document.getElementById("settingVoice").checked;
+  const notifications = document.getElementById("settingNotif").checked;
+  const llm_provider = document.getElementById("settingLLM").value;
+  await api("/settings", "PUT", {theme, voice_replies, notifications, llm_provider});
+  applySettingsTheme();
+}
+function applySettingsTheme(){
+  const theme = document.getElementById("settingTheme").value;
+  if (theme === "light"){
+    document.documentElement.style.setProperty("--bg", "#f4f3f8");
+    document.documentElement.style.setProperty("--panel", "#ffffff");
+    document.documentElement.style.setProperty("--panel-2", "#f0eef7");
+    document.documentElement.style.setProperty("--border", "#e2e0ec");
+    document.documentElement.style.setProperty("--text", "#1a1a22");
+    document.documentElement.style.setProperty("--muted", "#6b6878");
+  } else {
+    document.documentElement.style.setProperty("--bg", "#0b0b10");
+    document.documentElement.style.setProperty("--panel", "#13131b");
+    document.documentElement.style.setProperty("--panel-2", "#191923");
+    document.documentElement.style.setProperty("--border", "#26262f");
+    document.documentElement.style.setProperty("--text", "#f2f2f5");
+    document.documentElement.style.setProperty("--muted", "#9a98a8");
+  }
+}
+
+// ---------------- VOICE ASSISTANT (Web Speech API) ----------------
+let recognition = null;
+let isListening = false;
+const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+function toggleListening(){
+  if (!SpeechRecognitionAPI){
+    document.getElementById("voiceStatus").textContent = "Speech recognition isn't supported in this browser. Try Chrome.";
+    return;
+  }
+  if (isListening){ recognition.stop(); return; }
+  recognition = new SpeechRecognitionAPI();
+  recognition.lang = "en-US";
+  recognition.interimResults = false;
+  recognition.onstart = ()=>{
+    isListening = true;
+    document.getElementById("voiceStatus").textContent = "Listening...";
+    document.getElementById("voiceMicBtn").style.boxShadow = "0 0 0 6px rgba(124,92,255,0.25)";
+  };
+  recognition.onend = ()=>{
+    isListening = false;
+    document.getElementById("voiceMicBtn").style.boxShadow = "none";
+  };
+  recognition.onerror = (e)=>{
+    document.getElementById("voiceStatus").textContent = "Mic error: " + e.error;
+  };
+  recognition.onresult = async (event)=>{
+    const transcript = event.results[0][0].transcript;
+    document.getElementById("voiceTranscript").textContent = '"' + transcript + '"';
+    document.getElementById("voiceStatus").textContent = "Thinking...";
+    const res = await api("/chat", "POST", {message: transcript});
+    const replyBox = document.getElementById("voiceReply");
+    replyBox.style.display = "block";
+    replyBox.textContent = res.reply;
+    document.getElementById("voiceStatus").textContent = "Tap the mic and speak to MemoraX.";
+    speakReply(res.reply);
+    loadDashboard();
+    loadNotifications();
+  };
+  recognition.start();
+}
+function speakReply(text){
+  if (!("speechSynthesis" in window)) return;
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.rate = 1.0;
+  window.speechSynthesis.speak(utter);
+}
+
+// auto-login if token exists
+if (TOKEN) enterApp().catch(()=>logout());
+</script>
+</body>
+</html>
