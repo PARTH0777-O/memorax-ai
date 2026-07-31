@@ -23,7 +23,11 @@ import jwt
 from fastapi import FastAPI, HTTPException, Depends, Header, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+# ...other imports...
+
+app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
@@ -32,6 +36,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ...rest of your routes...
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
