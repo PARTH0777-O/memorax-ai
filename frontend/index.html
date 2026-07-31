@@ -378,7 +378,7 @@
 </div>
 
 <script>
-const API = "http://127.0.0.1:8000/api";
+const API = "https://memorax-ai-2.onrender.com/api";
 let TOKEN = localStorage.getItem("memorax_token") || null;
 let USER = null;
 let isSignup = false;
@@ -391,10 +391,10 @@ async function api(path, method="GET", body=null, isForm=false){
   if (body && !isForm){
     opts.headers["Content-Type"] = "application/json";
     opts.body = JSON.stringify(body);
-  } else if (isForm){
+ } else if (isForm){
     opts.body = body;
   }
-  const API = "https://memorax-ai-2.onrender.com";
+  const res = await fetch(API + path, opts);
   if (!res.ok){
     const err = await res.json().catch(()=>({detail:"Request failed"}));
     throw new Error(err.detail || "Request failed");
