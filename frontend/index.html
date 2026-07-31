@@ -391,7 +391,7 @@ async function api(path, method="GET", body=null, isForm=false){
   if (body && !isForm){
     opts.headers["Content-Type"] = "application/json";
     opts.body = JSON.stringify(body);
- } else if (isForm){
+  } else if (isForm){
     opts.body = body;
   }
   const res = await fetch(API + path, opts);
