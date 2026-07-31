@@ -394,7 +394,7 @@ async function api(path, method="GET", body=null, isForm=false){
   } else if (isForm){
     opts.body = body;
   }
-  const res = await fetch(API + path, opts);
+  const API = "https://memorax-ai-2.onrender.com";
   if (!res.ok){
     const err = await res.json().catch(()=>({detail:"Request failed"}));
     throw new Error(err.detail || "Request failed");
